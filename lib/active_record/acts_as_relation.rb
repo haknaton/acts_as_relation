@@ -58,7 +58,7 @@ module ActiveRecord
 
               base.extend ActiveRecord::ActsAsRelation::AccessMethods
               all_attributes = #{class_name}.content_columns.map(&:name)
-              ignored_attributes = ["created_at", "updated_at", options[:foreign_key] || "#{association_name}_id", options[:foreign_type] || "#{association_name}_type"]
+              ignored_attributes = ["created_at", "updated_at", "#{options[:foreign_key]}" || "#{association_name}_id", "#{options[:foreign_type]}" || "#{association_name}_type"]
               associations = #{class_name}.reflect_on_all_associations.map! { |assoc| assoc.name } - ["#{association_name}"]
               attributes_to_delegate = all_attributes - ignored_attributes + associations
               base.send :define_acts_as_accessors, attributes_to_delegate, "#{name}"
