@@ -48,6 +48,7 @@ module ActiveRecord
             :include    => options[:include],
             :conditions => options[:conditions]
           }
+		  has_one_options[:foreign_key] = options[:foreign_key] if options[:foreign_key] && options[:foreign_type]
 
           code = <<-EndCode
             def self.included(base)
@@ -57,7 +58,7 @@ module ActiveRecord
 
               base.extend ActiveRecord::ActsAsRelation::AccessMethods
               all_attributes = #{class_name}.content_columns.map(&:name)
-              ignored_attributes = ["created_at", "updated_at", "#{association_name}_id", "#{association_name}_type"]
+              ignored_attributes = ["created_at", "updated_at", options[:foreign_key] || "#{association_name}_id", options[:foreign_type] || "#{association_name}_type"]
               associations = #{class_name}.reflect_on_all_associations.map! { |assoc| assoc.name } - ["#{association_name}"]
               attributes_to_delegate = all_attributes - ignored_attributes + associations
               base.send :define_acts_as_accessors, attributes_to_delegate, "#{name}"
@@ -116,8 +117,16 @@ module ActiveRecord
       def acts_as_superclass options={}
         association_name = options[:as] || acts_as_association_name
 
+		belongs_to_options = {
+            :polymorphic => true
+        }
+		if options[:foreign_key] && options[:foreign_type]
+			belongs_to_options[:foreign_key] = options[:foreign_key]
+			belongs_to_options[:foreign_type] = options[:foreign_type]
+		end
+		  
         code = <<-EndCode
-          belongs_to :#{association_name}, :polymorphic => true
+          belongs_to :#{association_name}, #{belongs_to_options}
 
           def specific
             self.#{association_name}
